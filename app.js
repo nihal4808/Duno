@@ -574,11 +574,11 @@
 
             if (state.turnTimeLeft <= 0) {
                 stopTurnTimer();
-                // If it's my turn and time ran out, auto-draw/pass
+                // If it's my turn and time ran out, eliminate me
                 if (isMyTurn && state.gameData?.gameState === 'playing') {
-                    showToast('Time\'s up! Auto-drawing...');
+                    showToast('Time\'s up! You\'ve been eliminated!');
                     SFX.error();
-                    drawCard();
+                    eliminatePlayer(state.playerId);
                 }
             }
         }, 1000);
@@ -671,6 +671,14 @@
         // --- Draw button ---
         const drawBtn = document.getElementById('btn-draw');
         drawBtn.disabled = !myTurn || state.hasDrawnThisTurn;
+
+        // --- Stop Game button (host only) ---
+        const stopBtn = document.getElementById('btn-stop-game');
+        if (state.isHost && data.gameState === 'playing') {
+            stopBtn.classList.remove('hidden');
+        } else {
+            stopBtn.classList.add('hidden');
+        }
 
         // --- DUNO button ---
         const dunoBtn = document.getElementById('btn-duno');
@@ -1113,6 +1121,99 @@
     }
 
     // ==========================================
+    // STOP GAME & ELIMINATE PLAYER
+    // ==========================================
+
+    /** Host stops the game — ends for everyone, returns to lobby */
+    async function stopGame() {
+        if (!state.isHost) return;
+        if (!confirm('Stop the game and return everyone to lobby?')) return;
+
+        const data = state.gameData;
+        if (!data) return;
+
+        const updates = {
+            gameState: 'waiting',
+            deck: null,
+            discardPile: null,
+            currentTurn: null,
+            direction: 1,
+            currentColor: null,
+            playerOrder: null,
+            winner: null,
+            turnTimestamp: null
+        };
+
+        // Reset all player hands
+        const players = data.players || {};
+        for (const pid of Object.keys(players)) {
+            updates['players/' + pid + '/hand'] = [];
+            updates['players/' + pid + '/calledDuno'] = false;
+        }
+
+        try {
+            await db.ref('rooms/' + state.roomId).update(updates);
+            stopTurnTimer();
+            showScreen('screen-lobby');
+            showToast('Game stopped by host');
+        } catch (e) {
+            showToast('Failed to stop game');
+            console.error(e);
+        }
+    }
+
+    /** Eliminate a player from the active game */
+    async function eliminatePlayer(playerId) {
+        const data = state.gameData;
+        if (!data || data.gameState !== 'playing') return;
+
+        const playerOrder = [...data.playerOrder];
+        const eliminatedIndex = playerOrder.indexOf(playerId);
+        if (eliminatedIndex === -1) return;
+
+        // Put their cards back into the deck
+        let deck = data.deck ? [...data.deck] : [];
+        const eliminatedHand = data.players[playerId]?.hand || [];
+        deck = deck.concat(eliminatedHand);
+        shuffleDeck(deck);
+
+        // Remove from player order
+        playerOrder.splice(eliminatedIndex, 1);
+
+        const updates = {
+            deck: deck,
+            playerOrder: playerOrder,
+            ['players/' + playerId + '/hand']: [],
+            ['players/' + playerId + '/eliminated']: true
+        };
+
+        // If only 1 player left, they win
+        if (playerOrder.length <= 1) {
+            updates['gameState'] = 'finished';
+            updates['winner'] = playerOrder[0] || null;
+            SFX.win();
+        } else {
+            // Advance turn if it was the eliminated player's turn
+            if (data.currentTurn === playerId) {
+                const direction = data.direction || 1;
+                // Next player after the eliminated position
+                const nextIndex = ((eliminatedIndex * direction) % playerOrder.length + playerOrder.length) % playerOrder.length;
+                updates['currentTurn'] = playerOrder[nextIndex >= playerOrder.length ? 0 : nextIndex];
+                updates['turnTimestamp'] = firebase.database.ServerValue.TIMESTAMP;
+            }
+        }
+
+        const eliminatedName = data.players[playerId]?.name || 'A player';
+
+        try {
+            await db.ref('rooms/' + state.roomId).update(updates);
+            showToast(`${playerId === state.playerId ? 'You were' : eliminatedName + ' was'} eliminated!`);
+        } catch (e) {
+            console.error('Failed to eliminate player:', e);
+        }
+    }
+
+    // ==========================================
     // REJOIN SUPPORT
     // ==========================================
 
@@ -1208,10 +1309,11 @@
         document.getElementById('deck-stack').addEventListener('click', drawCard);
         document.getElementById('btn-duno').addEventListener('click', callDuno);
         document.getElementById('btn-leave-game').addEventListener('click', () => {
-            if (confirm('Are you sure you want to leave the game?')) {
-                leaveRoom();
+            if (confirm('Leave the game? You will be eliminated.')) {
+                eliminatePlayer(state.playerId).then(() => leaveRoom());
             }
         });
+        document.getElementById('btn-stop-game').addEventListener('click', stopGame);
 
         // Color picker
         document.querySelectorAll('.color-btn').forEach(btn => {
