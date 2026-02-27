@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="description" content="DUNO — A real-time multiplayer color-matching card game. Play with friends online!" />
+  <meta name="theme-color" content="#0f0f1a" />
+  <title>DUNO — Multiplayer Card Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ==================== WELCOME SCREEN ==================== -->
+  <div id="screen-welcome" class="screen active">
+    <div class="welcome-container">
+      <div class="logo-section">
+        <h1 class="logo">DUNO</h1>
+        <p class="tagline">The ultimate card showdown</p>
+      </div>
+
+      <div class="glass-card welcome-card">
+        <div class="input-group">
+          <label for="player-name">Your Name</label>
+          <input type="text" id="player-name" placeholder="Enter your name..." maxlength="12" autocomplete="off" />
+        </div>
+
+        <div class="button-group">
+          <button id="btn-create-room" class="btn btn-primary">
+            <span class="btn-icon">✦</span>
+            Create Room
+          </button>
+          <button id="btn-show-join" class="btn btn-secondary">
+            <span class="btn-icon">→</span>
+            Join Room
+          </button>
+        </div>
+
+        <div id="join-section" class="join-section hidden">
+          <div class="input-group">
+            <label for="room-code-input">Room Code</label>
+            <input type="text" id="room-code-input" placeholder="Enter 6-digit code..." maxlength="6" autocomplete="off" />
+          </div>
+          <button id="btn-join-room" class="btn btn-accent">
+            Join Game
+          </button>
+        </div>
+      </div>
+
+      <p class="footer-text">Play with 2–4 friends in real-time</p>
+    </div>
+  </div>
+
+  <!-- ==================== LOBBY SCREEN ==================== -->
+  <div id="screen-lobby" class="screen">
+    <div class="lobby-container">
+      <div class="glass-card lobby-card">
+        <h2 class="lobby-title">Game Lobby</h2>
+
+        <div class="room-code-display">
+          <span class="room-code-label">Room Code</span>
+          <span id="lobby-room-code" class="room-code-value">------</span>
+          <button id="btn-copy-code" class="btn-icon-only" title="Copy code">📋</button>
+        </div>
+
+        <div class="players-section">
+          <h3>Players <span id="player-count">(0/4)</span></h3>
+          <ul id="player-list" class="player-list"></ul>
+        </div>
+
+        <div id="lobby-actions" class="lobby-actions">
+          <button id="btn-start-game" class="btn btn-primary btn-large hidden">
+            🎮 Start Game
+          </button>
+          <p id="lobby-status" class="lobby-status">Waiting for host to start...</p>
+        </div>
+
+        <button id="btn-leave-lobby" class="btn btn-danger btn-small">Leave Room</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== GAME SCREEN ==================== -->
+  <div id="screen-game" class="screen">
+    <div class="game-container">
+
+      <!-- Top bar: opponents -->
+      <div id="opponents-bar" class="opponents-bar"></div>
+
+      <!-- Center: game table -->
+      <div class="game-table">
+        <div id="game-status-text" class="game-status-text">Your turn!</div>
+
+        <div class="table-center">
+          <div id="deck-stack" class="deck-stack" title="Draw a card">
+            <div class="deck-card"></div>
+            <div class="deck-card"></div>
+            <div class="deck-card"></div>
+            <span class="deck-count" id="deck-count">0</span>
+          </div>
+
+          <div id="discard-pile" class="discard-pile">
+            <div id="top-card" class="card"></div>
+          </div>
+        </div>
+
+        <div class="direction-indicator" id="direction-indicator">
+          <span class="direction-arrow">↻</span>
+        </div>
+      </div>
+
+      <!-- Bottom: player hand + actions -->
+      <div class="player-area">
+        <div class="player-actions">
+          <button id="btn-draw" class="btn btn-draw">
+            <span>🃏</span> Draw
+          </button>
+          <button id="btn-duno" class="btn btn-duno hidden">
+            DUNO!
+          </button>
+          <button id="btn-leave-game" class="btn btn-leave">
+            ✕
+          </button>
+        </div>
+        <div id="player-hand" class="player-hand"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== COLOR PICKER MODAL ==================== -->
+  <div id="modal-color-picker" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content glass-card">
+      <h3>Choose a color</h3>
+      <div class="color-picker-grid">
+        <button class="color-btn color-red" data-color="red"></button>
+        <button class="color-btn color-blue" data-color="blue"></button>
+        <button class="color-btn color-green" data-color="green"></button>
+        <button class="color-btn color-yellow" data-color="yellow"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== GAME OVER MODAL ==================== -->
+  <div id="modal-game-over" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content glass-card game-over-card">
+      <div class="trophy">🏆</div>
+      <h2 id="winner-text">Player Wins!</h2>
+      <p class="game-over-sub">What a game!</p>
+      <div class="game-over-actions">
+        <button id="btn-play-again" class="btn btn-primary">Play Again</button>
+        <button id="btn-back-home" class="btn btn-secondary">Home</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TOAST NOTIFICATION ==================== -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
