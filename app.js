@@ -12,7 +12,14 @@
     // ==========================================
 
     const COLORS = ['red', 'blue', 'green', 'yellow'];
-    const AVATAR_COLORS = ['#e84545', '#4285f4', '#34a853', '#f5c518'];
+    const AVATAR_COLORS = [
+        '#e84545', '#4285f4', '#34a853', '#f5c518',
+        '#9b59b6', '#1abc9c', '#e67e22', '#e74c3c',
+        '#3498db', '#2ecc71', '#f39c12', '#8e44ad',
+        '#16a085', '#d35400', '#c0392b', '#2980b9',
+        '#27ae60', '#f1c40f', '#7f8c8d', '#2c3e50'
+    ];
+    const MAX_PLAYERS = 20;
     const ACTION_CARDS = ['skip', 'reverse', 'draw2'];
     const SYMBOLS = {
         skip: '⊘',
@@ -141,33 +148,29 @@
     // ==========================================
 
     /** Generate the full 108-card deck */
-    function generateDeck() {
+    /** Generate deck(s) — scales with player count */
+    function generateDeck(numDecks = 1) {
         const deck = [];
 
-        for (const color of COLORS) {
-            // One 0 per color
-            deck.push({ color, type: 'number', value: 0 });
-
-            // Two each of 1–9
-            for (let n = 1; n <= 9; n++) {
-                deck.push({ color, type: 'number', value: n });
-                deck.push({ color, type: 'number', value: n });
+        for (let d = 0; d < numDecks; d++) {
+            for (const color of COLORS) {
+                deck.push({ color, type: 'number', value: 0 });
+                for (let n = 1; n <= 9; n++) {
+                    deck.push({ color, type: 'number', value: n });
+                    deck.push({ color, type: 'number', value: n });
+                }
+                for (const action of ACTION_CARDS) {
+                    deck.push({ color, type: 'action', value: action });
+                    deck.push({ color, type: 'action', value: action });
+                }
             }
-
-            // Two each of action cards
-            for (const action of ACTION_CARDS) {
-                deck.push({ color, type: 'action', value: action });
-                deck.push({ color, type: 'action', value: action });
+            for (let i = 0; i < 4; i++) {
+                deck.push({ color: 'wild', type: 'wild', value: 'wild' });
+                deck.push({ color: 'wild', type: 'wild', value: 'wild4' });
             }
         }
 
-        // 4 Wilds and 4 Wild Draw Fours
-        for (let i = 0; i < 4; i++) {
-            deck.push({ color: 'wild', type: 'wild', value: 'wild' });
-            deck.push({ color: 'wild', type: 'wild', value: 'wild4' });
-        }
-
-        return deck; // 108 cards total
+        return deck;
     }
 
     // ==========================================
@@ -346,8 +349,8 @@
             }
 
             const playerCount = roomData.players ? Object.keys(roomData.players).length : 0;
-            if (playerCount >= 4) {
-                showToast('Room is full (max 4 players)');
+            if (playerCount >= MAX_PLAYERS) {
+                showToast(`Room is full (max ${MAX_PLAYERS} players)`);
                 return;
             }
 
@@ -463,7 +466,7 @@
         const playerIds = Object.keys(players);
         const count = playerIds.length;
 
-        document.getElementById('player-count').textContent = `(${count}/4)`;
+        document.getElementById('player-count').textContent = `(${count}/${MAX_PLAYERS})`;
 
         const list = document.getElementById('player-list');
         list.innerHTML = '';
@@ -516,8 +519,9 @@
             return;
         }
 
-        // Generate and shuffle deck
-        let deck = generateDeck();
+        // Generate deck(s) — scale up for many players (1 deck per 8 players)
+        const numDecks = Math.ceil(playerIds.length / 8);
+        let deck = generateDeck(numDecks);
         shuffleDeck(deck);
 
         // Deal 7 cards to each player
