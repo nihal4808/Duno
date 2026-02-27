@@ -35,8 +35,14 @@
         hasDrawnThisTurn: false, // track if player drew this turn
         drawnCardIndex: -1,      // index of drawn card for immediate play
         calledDuno: false,
-        dunoTimeout: null
+        dunoTimeout: null,
+        turnTimer: null,        // interval for countdown
+        turnTimeLeft: 0,        // seconds remaining
+        lastTurnPlayer: null    // track turn changes
     };
+
+    const TURN_TIME_LIMIT = 30; // seconds per turn
+    const TIMER_CIRCUMFERENCE = 2 * Math.PI * 16; // ~100.53 for r=16
 
     // ==========================================
     // UTILITY FUNCTIONS
@@ -407,6 +413,8 @@
         state.hasDrawnThisTurn = false;
         state.drawnCardIndex = -1;
         state.calledDuno = false;
+        stopTurnTimer();
+        state.lastTurnPlayer = null;
     }
 
     // ==========================================
@@ -551,6 +559,60 @@
     }
 
     // ==========================================
+    // TURN TIMER
+    // ==========================================
+
+    /** Start the turn timer countdown */
+    function startTurnTimer(isMyTurn) {
+        stopTurnTimer();
+        state.turnTimeLeft = TURN_TIME_LIMIT;
+        updateTimerDisplay();
+
+        state.turnTimer = setInterval(() => {
+            state.turnTimeLeft--;
+            updateTimerDisplay();
+
+            if (state.turnTimeLeft <= 0) {
+                stopTurnTimer();
+                // If it's my turn and time ran out, auto-draw/pass
+                if (isMyTurn && state.gameData?.gameState === 'playing') {
+                    showToast('Time\'s up! Auto-drawing...');
+                    SFX.error();
+                    drawCard();
+                }
+            }
+        }, 1000);
+    }
+
+    /** Stop the turn timer */
+    function stopTurnTimer() {
+        if (state.turnTimer) {
+            clearInterval(state.turnTimer);
+            state.turnTimer = null;
+        }
+    }
+
+    /** Update the timer visual (ring + text) */
+    function updateTimerDisplay() {
+        const textEl = document.getElementById('timer-text');
+        const ringEl = document.getElementById('timer-ring-progress');
+        if (!textEl || !ringEl) return;
+
+        const t = Math.max(0, state.turnTimeLeft);
+        textEl.textContent = t;
+
+        // Calculate ring dash offset (full = 0, empty = circumference)
+        const progress = t / TURN_TIME_LIMIT;
+        const offset = TIMER_CIRCUMFERENCE * (1 - progress);
+        ringEl.style.strokeDashoffset = offset;
+
+        // Urgent styling when <= 10 seconds
+        const isUrgent = t <= 10;
+        textEl.className = 'timer-text' + (isUrgent ? ' urgent' : '');
+        ringEl.className.baseVal = 'timer-ring-progress' + (isUrgent ? ' urgent' : '');
+    }
+
+    // ==========================================
     // GAME RENDERING
     // ==========================================
 
@@ -562,11 +624,18 @@
         const topCard = data.discardPile ? data.discardPile[data.discardPile.length - 1] : null;
         const currentColor = data.currentColor || (topCard ? topCard.color : 'red');
 
+        // --- Turn timer ---
+        if (data.currentTurn !== state.lastTurnPlayer) {
+            state.lastTurnPlayer = data.currentTurn;
+            startTurnTimer(myTurn);
+        }
+
         // --- Status text ---
         const statusEl = document.getElementById('game-status-text');
         if (data.gameState === 'finished') {
             statusEl.textContent = 'Game Over!';
             statusEl.className = 'game-status-text';
+            stopTurnTimer();
         } else if (myTurn) {
             statusEl.textContent = 'Your turn!';
             statusEl.className = 'game-status-text your-turn';

@@ -57,7 +57,8 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   overflow: hidden;
 }
@@ -141,8 +142,15 @@ body::before {
 }
 
 @keyframes gradientShift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 .tagline {
@@ -435,8 +443,15 @@ body::before {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* ==========================================
@@ -485,8 +500,15 @@ body::before {
 }
 
 @keyframes glowPulse {
-  0%, 100% { box-shadow: 0 0 8px var(--clr-accent-glow); }
-  50% { box-shadow: 0 0 20px var(--clr-accent-glow); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 8px var(--clr-accent-glow);
+  }
+
+  50% {
+    box-shadow: 0 0 20px var(--clr-accent-glow);
+  }
 }
 
 .opponent-avatar {
@@ -530,7 +552,9 @@ body::before {
 }
 
 @keyframes blink {
-  50% { opacity: 0; }
+  50% {
+    opacity: 0;
+  }
 }
 
 /* ---------- Game Table ---------- */
@@ -560,6 +584,62 @@ body::before {
   color: var(--clr-accent);
   background: rgba(124, 92, 252, 0.12);
   border: 1px solid rgba(124, 92, 252, 0.25);
+}
+
+/* ---------- Turn Timer ---------- */
+.game-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.turn-timer {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.timer-ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.timer-ring-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 3;
+}
+
+.timer-ring-progress {
+  fill: none;
+  stroke: var(--clr-accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 100.53;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1s linear, stroke 0.3s ease;
+}
+
+.timer-ring-progress.urgent {
+  stroke: var(--clr-danger);
+}
+
+.timer-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--clr-text);
+}
+
+.timer-text.urgent {
+  color: var(--clr-danger);
+  animation: blink 0.5s step-end infinite;
 }
 
 .table-center {
@@ -609,9 +689,17 @@ body::before {
   letter-spacing: 2px;
 }
 
-.deck-card:nth-child(1) { transform: translate(0, 0); }
-.deck-card:nth-child(2) { transform: translate(2px, -2px); }
-.deck-card:nth-child(3) { transform: translate(4px, -4px); }
+.deck-card:nth-child(1) {
+  transform: translate(0, 0);
+}
+
+.deck-card:nth-child(2) {
+  transform: translate(2px, -2px);
+}
+
+.deck-card:nth-child(3) {
+  transform: translate(4px, -4px);
+}
 
 .deck-count {
   position: absolute;
@@ -704,11 +792,28 @@ body::before {
 }
 
 /* Card color variants */
-.card.card-red { background: linear-gradient(145deg, var(--clr-red), var(--clr-red-dark)); }
-.card.card-blue { background: linear-gradient(145deg, var(--clr-blue), var(--clr-blue-dark)); }
-.card.card-green { background: linear-gradient(145deg, var(--clr-green), var(--clr-green-dark)); }
-.card.card-yellow { background: linear-gradient(145deg, var(--clr-yellow), var(--clr-yellow-dark)); color: #333; }
-.card.card-wild { background: var(--clr-wild); background-size: 200% 200%; animation: gradientShift 3s ease infinite; }
+.card.card-red {
+  background: linear-gradient(145deg, var(--clr-red), var(--clr-red-dark));
+}
+
+.card.card-blue {
+  background: linear-gradient(145deg, var(--clr-blue), var(--clr-blue-dark));
+}
+
+.card.card-green {
+  background: linear-gradient(145deg, var(--clr-green), var(--clr-green-dark));
+}
+
+.card.card-yellow {
+  background: linear-gradient(145deg, var(--clr-yellow), var(--clr-yellow-dark));
+  color: #333;
+}
+
+.card.card-wild {
+  background: var(--clr-wild);
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+}
 
 /* Highlighted playable card */
 .card.playable {
@@ -731,14 +836,29 @@ body::before {
 }
 
 @keyframes cardDraw {
-  0% { transform: translateY(-60px) scale(0.5); opacity: 0; }
-  100% { transform: translateY(0) scale(1); opacity: 1; }
+  0% {
+    transform: translateY(-60px) scale(0.5);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
 }
 
 @keyframes cardPlay {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.2) translateY(-20px); }
-  100% { transform: scale(1) translateY(0); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.2) translateY(-20px);
+  }
+
+  100% {
+    transform: scale(1) translateY(0);
+  }
 }
 
 .discard-pile .card {
@@ -805,8 +925,17 @@ body::before {
 }
 
 @keyframes dunoPulse {
-  0%, 100% { transform: scale(1); box-shadow: 0 0 8px rgba(255, 71, 87, 0.4); }
-  50% { transform: scale(1.06); box-shadow: 0 0 20px rgba(255, 71, 87, 0.6); }
+
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 8px rgba(255, 71, 87, 0.4);
+  }
+
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 0 20px rgba(255, 71, 87, 0.6);
+  }
 }
 
 .btn-leave {
@@ -876,8 +1005,15 @@ body::before {
 }
 
 @keyframes modalIn {
-  0% { transform: scale(0.9); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .modal-content h3 {
@@ -911,10 +1047,21 @@ body::before {
   transform: scale(0.95);
 }
 
-.color-red { background: var(--clr-red); }
-.color-blue { background: var(--clr-blue); }
-.color-green { background: var(--clr-green); }
-.color-yellow { background: var(--clr-yellow); }
+.color-red {
+  background: var(--clr-red);
+}
+
+.color-blue {
+  background: var(--clr-blue);
+}
+
+.color-green {
+  background: var(--clr-green);
+}
+
+.color-yellow {
+  background: var(--clr-yellow);
+}
 
 /* Game Over */
 .game-over-card {
@@ -928,9 +1075,17 @@ body::before {
 }
 
 @keyframes trophyBounce {
-  0% { transform: scale(0) rotate(-20deg); }
-  50% { transform: scale(1.3) rotate(10deg); }
-  100% { transform: scale(1) rotate(0deg); }
+  0% {
+    transform: scale(0) rotate(-20deg);
+  }
+
+  50% {
+    transform: scale(1.3) rotate(10deg);
+  }
+
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
 }
 
 .game-over-card h2 {
@@ -974,8 +1129,15 @@ body::before {
 }
 
 @keyframes toastIn {
-  0% { transform: translateX(-50%) translateY(20px); opacity: 0; }
-  100% { transform: translateX(-50%) translateY(0); opacity: 1; }
+  0% {
+    transform: translateX(-50%) translateY(20px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
 }
 
 /* ==========================================
@@ -1063,7 +1225,18 @@ body::before {
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
 }
 
-.color-indicator.ci-red { background: var(--clr-red); }
-.color-indicator.ci-blue { background: var(--clr-blue); }
-.color-indicator.ci-green { background: var(--clr-green); }
-.color-indicator.ci-yellow { background: var(--clr-yellow); }
+.color-indicator.ci-red {
+  background: var(--clr-red);
+}
+
+.color-indicator.ci-blue {
+  background: var(--clr-blue);
+}
+
+.color-indicator.ci-green {
+  background: var(--clr-green);
+}
+
+.color-indicator.ci-yellow {
+  background: var(--clr-yellow);
+}
