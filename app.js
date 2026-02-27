@@ -349,10 +349,6 @@
             }
 
             const playerCount = roomData.players ? Object.keys(roomData.players).length : 0;
-            if (playerCount >= MAX_PLAYERS) {
-                showToast(`Room is full (max ${MAX_PLAYERS} players)`);
-                return;
-            }
 
             state.playerId = generatePlayerId();
             state.isHost = false;
@@ -466,7 +462,7 @@
         const playerIds = Object.keys(players);
         const count = playerIds.length;
 
-        document.getElementById('player-count').textContent = `(${count}/${MAX_PLAYERS})`;
+        document.getElementById('player-count').textContent = `(${count} joined)`;
 
         const list = document.getElementById('player-list');
         list.innerHTML = '';
