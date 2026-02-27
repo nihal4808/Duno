@@ -1168,6 +1168,9 @@
     // ==========================================
 
     async function init() {
+        // Load Firebase config from .env first
+        await initFirebase();
+
         initEventListeners();
 
         // Try to rejoin existing game
