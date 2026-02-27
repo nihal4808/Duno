@@ -574,11 +574,11 @@
 
             if (state.turnTimeLeft <= 0) {
                 stopTurnTimer();
-                // If it's my turn and time ran out, eliminate me
+                // If it's my turn and time ran out, auto-draw and skip
                 if (isMyTurn && state.gameData?.gameState === 'playing') {
-                    showToast('Time\'s up! You\'ve been eliminated!');
+                    showToast('Time\'s up! Auto-drawing...');
                     SFX.error();
-                    eliminatePlayer(state.playerId);
+                    drawCard();
                 }
             }
         }, 1000);
@@ -1127,39 +1127,10 @@
     /** Host stops the game — ends for everyone, returns to lobby */
     async function stopGame() {
         if (!state.isHost) return;
-        if (!confirm('Stop the game and return everyone to lobby?')) return;
+        if (!confirm('Stop and leave the game? You will be eliminated.')) return;
 
-        const data = state.gameData;
-        if (!data) return;
-
-        const updates = {
-            gameState: 'waiting',
-            deck: null,
-            discardPile: null,
-            currentTurn: null,
-            direction: 1,
-            currentColor: null,
-            playerOrder: null,
-            winner: null,
-            turnTimestamp: null
-        };
-
-        // Reset all player hands
-        const players = data.players || {};
-        for (const pid of Object.keys(players)) {
-            updates['players/' + pid + '/hand'] = [];
-            updates['players/' + pid + '/calledDuno'] = false;
-        }
-
-        try {
-            await db.ref('rooms/' + state.roomId).update(updates);
-            stopTurnTimer();
-            showScreen('screen-lobby');
-            showToast('Game stopped by host');
-        } catch (e) {
-            showToast('Failed to stop game');
-            console.error(e);
-        }
+        await eliminatePlayer(state.playerId);
+        leaveRoom();
     }
 
     /** Eliminate a player from the active game */
